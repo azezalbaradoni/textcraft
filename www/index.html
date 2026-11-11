@@ -16,17 +16,22 @@ button.main{background:var(--ac);color:#fff}
 main{flex:1;min-height:0;position:relative}
 section{display:none;position:absolute;inset:0;padding:12px;overflow:auto}
 section.on{display:flex;flex-direction:column;gap:10px}
+#set>*{flex:none}
 textarea{flex:1;min-height:0;width:100%;border:1px solid var(--ln);border-radius:8px;padding:12px;font-family:inherit;font-size:16px;line-height:1.8;color:inherit;resize:none}
 #html{direction:ltr;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.5}
+#tc{flex:none;height:150px;direction:ltr;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.4;margin:6px 0}
 iframe{flex:1;width:100%;border:0;background:#d9dee5;border-radius:6px}
 nav{display:flex;border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
 nav button{flex:1;border:0;border-radius:0;padding:14px 0;color:#566;background:#fff}
 nav button.on{color:var(--ac);font-weight:600;box-shadow:inset 0 3px var(--ac)}
-.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0}
-.row select,.row input{max-width:55%;font-family:inherit;font-size:15px}
-.row select{padding:6px;border:1px solid var(--ln);border-radius:6px;background:#fff;color:inherit}
-small{color:#566}
-.bar{display:flex;gap:8px;align-items:center}
+details{border:1px solid var(--ln);border-radius:8px;padding:0 10px}
+summary{padding:10px 0;font-weight:600}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0}
+.row select,.row input[type=text]{max-width:58%;min-width:0;font-family:inherit;font-size:15px;padding:6px;border:1px solid var(--ln);border-radius:6px;background:#fff;color:inherit}
+.row input[type=range]{max-width:55%}
+small{color:#566;display:block;margin:4px 0 8px}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0 10px}
+.chip{border:0;color:#222;padding:5px 12px;border-radius:999px;margin:3px}
 #toast{position:fixed;bottom:76px;inset-inline:16px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:8px;text-align:center;display:none}
 :focus-visible{outline:2px solid var(--ac);outline-offset:2px}
 </style>
@@ -40,20 +45,25 @@ small{color:#566}
 </header>
 <main>
   <section id="text" class="on">
-    <textarea id="txt" placeholder="اكتب النص أو الصقه هنا"></textarea>
+    <textarea id="txt" placeholder="اكتب النص أو الصقه هنا. للتمييز: **نص** ملوّن، و ==نص== تظليل، و [[نص]] وسم. وللتنبيهات ابدأ الفقرة بـ ملاحظة: أو تنبيه: أو نصيحة: أو مثال:"></textarea>
     <div class="bar"><label for="file"><small>استيراد ملف TXT أو HTML</small></label><input type="file" id="file" accept=".txt,.html,.htm,text/plain,text/html"></div>
   </section>
   <section id="set">
-    <div class="row"><label for="tpl">القالب</label><select id="tpl"></select></div>
-    <div class="row"><label for="mode">معالجة النص</label><select id="mode"><option value="struct">منظم (عناوين وقوائم)</option><option value="raw">نص أصلي دون تغيير</option></select></div>
-    <small>في الوضعين يُحفظ كل حرف ورقم كما كُتب، ولا يُضاف أي محتوى. للعناوين استخدم # و ## و ###، وللقوائم - في أول السطر.</small>
-    <div class="row"><label for="dir">الاتجاه</label><select id="dir"><option value="rtl">عربي (من اليمين)</option><option value="ltr">English (LTR)</option></select></div>
-    <div class="row"><label for="font">الخط</label><select id="font"><option value="'Noto Naskh Arabic','Traditional Arabic','Droid Naskh',serif">نسخ</option><option value="'Noto Sans Arabic',Tahoma,'Segoe UI',sans-serif">سانس</option><option value="Georgia,'Noto Naskh Arabic',serif">Georgia</option></select></div>
-    <div class="row"><label for="size">حجم الخط</label><input type="range" id="size" min="10" max="18" value="12"></div>
-    <div class="row"><label for="col">لون النص</label><input type="color" id="col" value="#1b2430"></div>
-    <div class="row"><label for="mar">الهوامش</label><input type="range" id="mar" min="5" max="30" value="15"></div>
-    <div class="row"><label for="cols">الأعمدة</label><select id="cols"><option value="1">عمود واحد</option><option value="2">عمودان</option></select></div>
-    <div class="row"><label for="proj">مشاريعي</label><select id="proj"><option value="">فتح مشروع محفوظ</option></select></div>
+    <div id="gr"></div>
+    <details open><summary>تمييز كلمات (Highlights)</summary>
+      <small>أضف كلمة أو عبارة واختر لونها، فتُظلَّل في كل مواضعها.</small>
+      <div class="row"><input type="text" id="ht" placeholder="الكلمة أو العبارة"><select id="hc"><option value="0">أصفر</option><option value="1">أخضر</option><option value="2">أحمر</option><option value="3">أزرق</option><option value="4">بنفسجي</option></select><button id="ha">إضافة</button></div>
+      <div id="hl"></div>
+    </details>
+    <details><summary>قالب HTML جاهز</summary>
+      <small>الصق كود قالب كامل. ضع {{content}} مكان المحتوى، و{{title}} للعنوان، و{{date}} للتاريخ. وإن لم تضع {{content}} يُضاف المحتوى قبل نهاية body. لتقليد تصميم موجود تمامًا، أرسل صورته أو ملفه إلى Claude في المحادثة ليحوّله إلى قالب جاهز تلصقه هنا.</small>
+      <div class="row"><label for="tn">اسم القالب</label><input type="text" id="tn"></div>
+      <textarea id="tc" spellcheck="false" placeholder="&lt;html&gt;...{{content}}...&lt;/html&gt;"></textarea>
+      <div class="bar"><button id="ts" class="main">حفظ القالب</button><button id="td">حذف القالب الحالي</button><input type="file" id="tf" accept=".html,.htm,text/html"></div>
+    </details>
+    <details><summary>مشاريعي</summary>
+      <div class="row"><label for="proj">فتح مشروع</label><select id="proj"><option value="">اختر</option></select></div>
+    </details>
   </section>
   <section id="src">
     <textarea id="html" spellcheck="false" aria-label="كود HTML"></textarea>
@@ -71,46 +81,207 @@ small{color:#566}
 <div id="toast" role="status"></div>
 <script>
 const $=id=>document.getElementById(id);
-const T={
-  acad:{n:'أكاديمي',c:'h1{color:#1d3a5f;border-bottom:2px solid #1d3a5f}h2{color:#1d3a5f}'},
-  med:{n:'طبي',c:'h1{color:#14665a}h2{background:#e4f2ef;color:#14665a;padding:.3em .6em;border-inline-start:5px solid #1f8a7a}'},
-  rev:{n:'مراجعة',c:'h2{background:#fff3d6;padding:.3em .6em;border-radius:4px}h3{color:#a3470f}'},
-  form:{n:'رسمي',c:'h1{text-align:center}h2{border-bottom:1px solid #555}'},
-  bw:{n:'أبيض وأسود',c:'*{color:#000!important;background:#fff!important}h1,h2{border-bottom:1px solid #000}'}
+const SYS="'Noto Naskh Arabic','Noto Sans Arabic',Tahoma,'Segoe UI',sans-serif";
+const FONTS=[['sys','افتراضي النظام','',''],['cairo','Cairo','Cairo','cairo'],['tajawal','Tajawal','Tajawal','tajawal'],['amiri','Amiri (نسخ كلاسيكي)','Amiri','amiri'],['naskh','Noto Naskh','Noto Naskh Arabic','noto-naskh-arabic'],['almarai','Almarai','Almarai','almarai'],['plex','IBM Plex Arabic','IBM Plex Sans Arabic','ibm-plex-sans-arabic'],['messiri','El Messiri','El Messiri','el-messiri'],['sche','Scheherazade','Scheherazade New','scheherazade-new'],['reem','Reem Kufi','Reem Kufi','reem-kufi'],['inter','Inter (لاتيني)','Inter','inter'],['merri','Merriweather (لاتيني)','Merriweather','merriweather'],['lora','Lora (لاتيني)','Lora','lora']];
+const FO=id=>FONTS.find(x=>x[0]===id)||FONTS[0];
+const stk=f=>f[3]?"'"+f[2]+"',"+SYS:SYS;
+const TH={
+  acad:{n:'أكاديمي',main:'#1d3a5f',col:'#1b2430',hs:'under',bs:'dot',multi:'0',pal:['#1d3a5f','#2f5d8a','#3d5a80','#4a6fa5','#2c4a6e','#1d3a5f']},
+  med:{n:'طبي',main:'#14665a',col:'#1b2b29',hs:'bar',bs:'check',multi:'1',pal:['#14665a','#1f8a7a','#0e7490','#2a7f6a','#0f766e','#4d7c0f']},
+  col:{n:'ملوّن',main:'#7c3aed',col:'#222222',hs:'band',bs:'badge',multi:'1',pal:['#7c3aed','#db2777','#c2410c','#0d9488','#2563eb','#a16207']},
+  form:{n:'رسمي',main:'#7f1d1d',col:'#111111',hs:'under',bs:'sq',multi:'0',pal:['#7f1d1d','#9a3412','#44403c','#7f1d1d','#57534e','#7f1d1d']},
+  mod:{n:'عصري',main:'#4f46e5',col:'#1e1b4b',hs:'grad',bs:'arrow',multi:'1',pal:['#4f46e5','#7c3aed','#0284c7','#0d9488','#c026d3','#b45309']},
+  soft:{n:'دفتر ملاحظات',main:'#b45309',col:'#292524',hs:'box',bs:'star',multi:'1',pal:['#b45309','#be185d','#0f766e','#4338ca','#a16207','#9f1239']},
+  bw:{n:'أبيض وأسود',main:'#000000',col:'#000000',hs:'under',bs:'dot',multi:'0',pal:['#000','#333','#555','#222','#444','#000']}
 };
-const IDS=['tpl','mode','dir','font','size','col','mar','cols'];
-let manual=false,tt;
+const HS={
+  under:'h1,h2{color:var(--a);border-bottom:2px solid var(--a);padding-bottom:.15em}',
+  band:'h1,h2{background:var(--a);color:#fff;padding:.3em .7em;border-radius:6px}',
+  bar:'h1,h2{color:var(--a);background:color-mix(in srgb,var(--a) 12%,#fff);border-inline-start:6px solid var(--a);padding:.3em .7em;border-radius:4px}',
+  pill:'h1,h2{display:inline-block;background:var(--a);color:#fff;padding:.15em 1em;border-radius:999px}',
+  grad:'h1,h2{background:linear-gradient(90deg,var(--a),color-mix(in srgb,var(--a) 35%,#fff));color:#fff;padding:.3em .8em;border-radius:8px}',
+  box:'h1,h2{color:var(--a);border:2px solid var(--a);padding:.25em .7em;border-radius:10px;box-shadow:3px 3px 0 var(--a)}'
+};
+const BS={dot:'content:"●"',dia:'content:"◆"',arrow:'content:"➤"',check:'content:"✔"',star:'content:"★"',sq:'content:"■"',badge:'content:"";width:.55em;height:.55em;border-radius:50%;background:var(--a);top:.75em;box-shadow:0 0 0 .2em color-mix(in srgb,var(--a) 25%,transparent)'};
+const HC=['#fff176','#a7f3d0','#fecaca','#bfdbfe','#e9d5ff'];
+const OPT=a=>a.map(x=>'<option value="'+x[0]+'">'+x[1]+'</option>').join('');
 const lsg=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
 const lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
-const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-function toast(m){const e=$('toast');e.textContent=m;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',2500)}
-function st(){const s={name:$('name').value,text:$('txt').value};IDS.forEach(i=>s[i]=$(i).value);return s}
-function ld(s){$('name').value=s.name||'مستند جديد';$('txt').value=s.text||'';IDS.forEach(i=>{if(s[i]!=null)$(i).value=s[i]})}
-function body(t,mode){
-  if(mode==='raw')return t.split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('\n');
-  const out=[],para=[];let ul=false;
-  const fp=()=>{if(para.length){out.push('<p>'+para.join('<br>')+'</p>');para.length=0}};
-  const eu=()=>{if(ul){out.push('</ul>');ul=false}};
-  for(const raw of t.split('\n')){
-    const l=raw.trimEnd();let m;
-    if(!l.trim()){fp();eu();continue}
-    if(m=l.match(/^(#{1,3})\s+(.*)/)){fp();eu();out.push('<h'+m[1].length+'>'+esc(m[2])+'</h'+m[1].length+'>')}
-    else if(m=l.match(/^[-*•]\s+(.*)/)){fp();if(!ul){out.push('<ul>');ul=true}out.push('<li>'+esc(m[1])+'</li>')}
-    else{eu();para.push(esc(l))}
-  }
-  fp();eu();return out.join('\n');
+const TPLS=()=>lsg('tc_tpls',{});
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const tplOpts=()=>Object.keys(TH).map(k=>'<option value="'+k+'">'+TH[k].n+'</option>').join('')+Object.keys(TPLS()).map(n=>'<option value="c:'+esc(n)+'">قالبي: '+esc(n)+'</option>').join('');
+const G=[
+ ['التصميم',[
+  ['tpl','القالب','sel',tplOpts],
+  ['hs','نمط العناوين','sel',[['under','خط سفلي'],['band','شريط ملوّن'],['bar','شريط جانبي'],['pill','كبسولة'],['grad','تدرّج'],['box','إطار بظل']]],
+  ['bs','نمط النقاط','sel',[['dot','● دائرة'],['badge','◉ هالة'],['dia','◆ معيّن'],['arrow','➤ سهم'],['check','✔ صح'],['star','★ نجمة'],['sq','■ مربع']]],
+  ['multi','ألوان الأقسام','sel',[['1','متعددة (تتناوب)'],['0','لون واحد']]],
+  ['main','لون العناوين','clr','#1d3a5f'],
+  ['col','لون النص','clr','#1b2430']]],
+ ['الخطوط والنص',[
+  ['bf','خط النص','sel',FONTS.map(f=>[f[0],f[1]])],
+  ['hf','خط العناوين','sel',FONTS.map(f=>[f[0],f[1]])],
+  ['size','حجم الخط','rng',10,18,12,1],
+  ['lh','تباعد الأسطر','rng',1.4,2.4,1.8,0.1],
+  ['just','المحاذاة','sel',[['0','عادية'],['1','ضبط (Justify)']]],
+  ['dir','اتجاه النص','sel',[['auto','تلقائي (لكل فقرة)'],['rtl','عربي دائمًا'],['ltr','English دائمًا']]],
+  ['mode','معالجة النص','sel',[['struct','تلقائي (عناوين وقوائم)'],['raw','نص أصلي دون تغيير']]]]],
+ ['الصفحة',[
+  ['pg','الورق','sel',[['A4','A4'],['A5','A5'],['LET','Letter']]],
+  ['ori','الاتجاه','sel',[['p','طولي'],['l','عرضي']]],
+  ['mar','الهوامش (مم)','rng',5,30,15,1],
+  ['cols','الأعمدة','sel',[['1','عمود واحد'],['2','عمودان']]],
+  ['cover','صفحة غلاف','sel',[['0','لا'],['1','نعم']]],
+  ['sub','عنوان فرعي للغلاف','txt'],
+  ['by','اسم المؤلف','txt'],
+  ['toc','فهرس المحتويات','sel',[['0','لا'],['1','نعم']]],
+  ['wm','علامة مائية','txt']]]
+];
+const IDS=G.flatMap(g=>g[1].map(c=>c[0]));
+$('gr').innerHTML=G.map(([g,cs])=>'<details open style="margin-bottom:10px"><summary>'+g+'</summary>'+cs.map(c=>{
+  const [id,lb,ty,a,b,d,sp]=c;let e;
+  if(ty==='sel')e='<select id="'+id+'">'+(typeof a==='function'?a():OPT(a))+'</select>';
+  else if(ty==='rng')e='<input type="range" id="'+id+'" min="'+a+'" max="'+b+'" step="'+sp+'" value="'+d+'">';
+  else if(ty==='clr')e='<input type="color" id="'+id+'" value="'+a+'">';
+  else e='<input type="text" id="'+id+'">';
+  return '<div class="row"><label for="'+id+'">'+lb+'</label>'+e+'</div>';
+}).join('')+'</details>').join('');
+
+let HL=[],DA='',manual=false,tt;
+const SENT=/[.،,؛;!؟?]$/;
+const NUM=/^[\d٠-٩]+[.)\-–]\s+\S/;
+const ORD=/^(أولا|أولاً|ثانيا|ثانياً|ثالثا|ثالثاً|رابعا|رابعاً|خامسا|خامساً|سادسا|سادساً|سابعا|سابعاً|ثامنا|ثامناً|تاسعا|تاسعاً|عاشرا|عاشراً)(\s|[:\-–.)])/;
+const BIG=/^(الفصل|الباب|الوحدة|الجزء|القسم|المحور|Chapter|Part|Unit|Module|Section)(\s|$)/i;
+const CAL=/^(ملاحظة|تنبيه|مهم|تحذير|نصيحة|مثال|تعريف|Note|Warning|Important|Tip|Example|Definition)\s*[:：]\s*([\s\S]*)$/i;
+const CT={'ملاحظة':'i','تنبيه':'w','مهم':'w','تحذير':'w','نصيحة':'t','مثال':'e','تعريف':'i',note:'i',warning:'w',important:'w',tip:'t',example:'e',definition:'i'};
+
+function toast(m){const e=$('toast');e.textContent=m;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',2800)}
+function st(){const s={name:$('name').value,text:$('txt').value,hl:HL};IDS.forEach(i=>s[i]=$(i).value);return s}
+function chips(){$('hl').innerHTML=HL.map((h,i)=>'<button class="chip" data-i="'+i+'" style="background:'+HC[h.c]+'">'+esc(h.t)+' ✕</button>').join('')}
+function ld(s){
+  $('name').value=s.name||'مستند جديد';$('txt').value=s.text||'';
+  IDS.forEach(i=>{if(s[i]!=null)$(i).value=s[i]});
+  if(!$('tpl').value)$('tpl').value='acad';
+  HL=s.hl||[];chips();
 }
-function doc(){
-  const s=st();
-  return '<!DOCTYPE html>\n<html lang="'+(s.dir==='rtl'?'ar':'en')+'" dir="'+s.dir+'">\n<head>\n<meta charset="utf-8">\n<title>'+esc(s.name)+'</title>\n<style>\n'
-  +'@page{size:A4;margin:'+s.mar+'mm}\n'
-  +'body{font-family:'+s.font+';font-size:'+s.size+'pt;line-height:1.8;color:'+s.col+';margin:0}\n'
-  +'.c{column-count:'+s.cols+';column-gap:8mm}\n'
-  +'h1,h2,h3{break-after:avoid;line-height:1.4}p,li{orphans:3;widows:3}\n'
-  +'table{width:100%;border-collapse:collapse}td,th{border:1px solid #999;padding:4px}\n'
-  +T[s.tpl].c+'\n'
-  +'@media screen{html{background:#d9dee5}body{background:#fff;max-width:210mm;margin:8px auto;padding:'+s.mar+'mm}}\n'
-  +'</style>\n</head>\n<body>\n<div class="c">\n'+body(s.text,s.mode)+'\n</div>\n</body>\n</html>';
+function applyTheme(){const t=TH[$('tpl').value];if(!t)return;['main','col','hs','bs','multi'].forEach(k=>$(k).value=t[k])}
+
+function inl(t,mk){
+  let s=esc(t);
+  if(HL.length){
+    const mp={};HL.forEach(h=>mp[esc(h.t).toLowerCase()]=h.c);
+    const re=new RegExp(Object.keys(mp).sort((a,b)=>b.length-a.length).map(x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),'gi');
+    s=s.replace(re,m=>'<mark class="h'+mp[m.toLowerCase()]+'">'+m+'</mark>');
+  }
+  if(mk)s=s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/==(.+?)==/g,'<mark class="h0">$1</mark>').replace(/\[\[(.+?)\]\]/g,'<span class="tg">$1</span>');
+  return s;
+}
+function lvl(L,i,first){
+  const t=L[i].trim(),nx=L.slice(i+1).find(x=>x.trim()),pv=i?L[i-1].trim():'';
+  if(/^\d+(\.\d+)+[\s.)\-–]+\p{L}{4,}/u.test(t))return t.length>90||NUM.test(pv)?0:3;
+  if(NUM.test(t))return(t.length<=60&&!SENT.test(t)&&!(nx&&NUM.test(nx.trim()))&&!NUM.test(pv))?2:-1;
+  if(t.length>90)return 0;
+  if(i===first&&nx&&!SENT.test(t))return 1;
+  if(BIG.test(t))return 1;
+  if(ORD.test(t)&&!SENT.test(t))return 2;
+  if(/[:：]$/.test(t)&&t.length<=60)return 3;
+  if(SENT.test(t))return 0;
+  if(!pv&&nx&&t.split(/\s+/).length<=7&&t.length<=50)return 2;
+  if(/^[A-Z0-9\s\-&]{3,60}$/.test(t)&&/[A-Z]{3}/.test(t))return 2;
+  return 0;
+}
+function tbl(R){
+  const c=r=>r.trim().replace(/^\||\|$/g,'').split('|').map(x=>x.trim());
+  const hd=R.length>1&&/^[\s|:\-]+$/.test(R[1]);
+  let h='<table>';
+  R.forEach((r,i)=>{if(hd&&i===1)return;const t=hd&&i===0?'th':'td';h+='<tr>'+c(r).map(x=>'<'+t+DA+'>'+inl(x,1)+'</'+t+'>').join('')+'</tr>'});
+  return h+'</table>';
+}
+function body(t,mode,H,PL){
+  if(mode==='raw')return t.split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p'+DA+'>'+inl(p,0).replace(/\n/g,'<br>')+'</p>').join('\n');
+  const L=t.split('\n'),first=L.findIndex(x=>x.trim()),out=[],para=[];
+  let ul=false,sec=false,k=-1;
+  const fp=()=>{
+    if(!para.length)return;
+    const j=para.join('\n'),m=j.match(CAL);
+    out.push(m?'<div class="bx '+CT[m[1].toLowerCase()]+'"'+DA+'><b>'+esc(m[1])+':</b> '+inl(m[2],1).replace(/\n/g,'<br>')+'</div>':'<p'+DA+'>'+inl(j,1).replace(/\n/g,'<br>')+'</p>');
+    para.length=0;
+  };
+  const eu=()=>{if(ul){out.push('</ul>');ul=false}};
+  const hd=(n,x)=>{
+    fp();eu();
+    if(n<3){if(sec)out.push('</div>');if(n===2)k=(k+1)%PL;out.push('<div class="sec s'+(n===1?0:Math.max(k,0))+'">');sec=true}
+    const id='h'+H.length;H.push([n,x,id]);
+    out.push('<h'+n+' id="'+id+'"'+DA+'>'+inl(x,1)+'</h'+n+'>');
+  };
+  const li=(c,n,x)=>{fp();if(!ul){out.push('<ul>');ul=true}out.push('<li'+(c?' class="n" data-n="'+esc(n)+'"':'')+DA+'>'+inl(x,1)+'</li>')};
+  for(let i=0;i<L.length;i++){
+    const l=L[i].trimEnd();let m;
+    if(!l.trim()){fp();eu();continue}
+    if(m=l.match(/^(#{1,3})\s+(.*)/)){hd(m[1].length,m[2]);continue}
+    if(m=l.match(/^[-*•–·]\s+(.*)/)){li('',0,m[1]);continue}
+    if(l.includes('|')&&(L[i+1]||'').includes('|')){
+      fp();eu();const R=[];let j=i;
+      while(j<L.length&&L[j].includes('|')){R.push(L[j]);j++}
+      i=j-1;out.push(tbl(R));continue;
+    }
+    const v=lvl(L,i,first);
+    if(v>0)hd(v,l.trim());
+    else if(v<0){m=l.trim().match(/^([\d٠-٩]+)[.)\-–]\s+(.*)/);li('n',m[1],m[2])}
+    else{eu();para.push(l)}
+  }
+  fp();eu();if(sec)out.push('</div>');
+  return out.join('\n');
+}
+function lite(s,pr){
+  const P={A4:[210,297,'A4'],A5:[148,210,'A5'],LET:[216,279,'letter']}[s.pg]||[210,297,'A4'],land=s.ori==='l',w=land?P[1]:P[0];
+  return '@page{size:'+P[2]+(land?' landscape':'')+';margin:'+(pr?0:s.mar)+'mm}'
+  +':root{--m:'+s.main+';--a:'+s.main+'}'
+  +'mark{color:inherit;padding:0 .15em;border-radius:3px}mark.h0{background:#fff176}mark.h1{background:#a7f3d0}mark.h2{background:#fecaca}mark.h3{background:#bfdbfe}mark.h4{background:#e9d5ff}'
+  +'strong{color:var(--a)}.tg{background:var(--a);color:#fff;padding:0 .5em;border-radius:4px;font-size:.85em}'
+  +'.bx{border-inline-start:5px solid var(--a);background:color-mix(in srgb,var(--a) 10%,#fff);padding:.5em .8em;border-radius:6px;margin:.6em 0}.bx.w{--a:#dc2626}.bx.t{--a:#059669}.bx.i{--a:#2563eb}.bx.e{--a:#7c3aed}.bx b{color:var(--a)}'
+  +'table{width:100%;border-collapse:collapse;margin:.6em 0}td,th{border:1px solid #cbd5e1;padding:.3em .5em;text-align:start}th{background:var(--a);color:#fff}tr:nth-child(even) td{background:#f8fafc}'
+  +'.c{column-count:'+s.cols+';column-gap:8mm}'
+  +'.cover{min-height:240mm;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;page-break-after:always}.cover .t{font-size:2.6em;font-weight:800;color:var(--m)}.cover .t::after{content:"";display:block;width:3em;height:5px;background:var(--m);margin:.4em auto 0}.cover .st{font-size:1.3em;margin:.6em 0}.cover .by{color:#666}'
+  +'.toc{page-break-after:always}.toc .tt{font-size:1.5em;font-weight:700;color:var(--m);margin-bottom:.5em}.toc a{color:inherit;text-decoration:none}.toc .l{margin:.25em 0}.toc .l2{padding-inline-start:1.2em}.toc .l3{padding-inline-start:2.4em}'
+  +'.wm{position:fixed;top:42%;inset-inline:0;text-align:center;font-size:80pt;font-weight:800;color:rgba(0,0,0,.06);transform:rotate(-30deg);z-index:-1}'
+  +'li.n{list-style:none}li.n::before{content:attr(data-n)". "}'
+  +(pr?'':'@media screen{html{background:#d9dee5}body{background:#fff;max-width:'+w+'mm;margin:8px auto;padding:'+s.mar+'mm;box-sizing:border-box}}');
+}
+function css(s,pal){
+  return pal.map((c,i)=>'.s'+i+'{--a:'+c+'}').join('')
+  +'body{margin:0;font-family:'+stk(FO(s.bf))+';font-size:'+s.size+'pt;line-height:'+s.lh+';color:'+s.col+'}'
+  +'h1,h2,h3{font-family:'+stk(FO(s.hf))+';break-after:avoid;line-height:1.4;margin:1em 0 .45em}'
+  +'h1{--a:var(--m);font-size:1.75em}h2{font-size:1.38em}h3{font-size:1.15em;color:var(--a)}h3::before{content:"▎";margin-inline-end:.3em}'
+  +(HS[s.hs]||HS.under)
+  +'p{margin:.45em 0'+(s.just==='1'?';text-align:justify':'')+'}ul{padding:0;margin:.5em 0}'
+  +'li{list-style:none;position:relative;padding-inline-start:1.7em;margin:.3em 0}'
+  +'li::before{position:absolute;inset-inline-start:0;color:var(--a);font-size:.8em;top:.3em;'+(BS[s.bs]||BS.dot)+'}'
+  +(s.bs==='arrow'?'li:dir(rtl)::before{transform:scaleX(-1)}':'')
+  +'li.n{padding-inline-start:2.4em}li.n::before{content:attr(data-n);width:1.7em;height:1.7em;line-height:1.7em;border-radius:50%;background:var(--a);color:#fff;text-align:center;font-size:.85em;font-weight:700;top:.1em;box-shadow:none;transform:none}';
+}
+function doc(pr){
+  const s=st(),th=TH[s.tpl],cu=/^c:/.test(s.tpl);
+  HL=s.hl||[];
+  const rtl=s.dir==='auto'?/[\u0590-\u08FF]/.test(s.text.slice(0,400)):s.dir==='rtl';
+  DA=s.dir==='auto'?' dir="auto"':'';
+  const pal=(th&&s.multi==='1')?th.pal:[s.main],H=[];
+  const bd=body(s.text,s.mode,H,pal.length);
+  const date=new Date().toLocaleDateString('en-GB');
+  const fl=[...new Set([s.bf,s.hf])].map(FO).filter(f=>f[3]).map(f=>'<link rel="stylesheet" href="fonts/'+f[3]+'/400.css"><link rel="stylesheet" href="fonts/'+f[3]+'/700.css">').join('');
+  const cover=s.cover==='1'?'<section class="cover"><div class="t"'+DA+'>'+esc(s.name)+'</div>'+(s.sub?'<div class="st"'+DA+'>'+esc(s.sub)+'</div>':'')+'<div class="by">'+esc([s.by,date].filter(Boolean).join(' · '))+'</div></section>':'';
+  const toc=s.toc==='1'&&H.length?'<nav class="toc"><div class="tt">'+(rtl?'المحتويات':'Contents')+'</div>'+H.map(h=>'<div class="l l'+h[0]+'"'+DA+'><a href="#'+h[2]+'">'+esc(h[1])+'</a></div>').join('')+'</nav>':'';
+  const inner=(s.wm?'<div class="wm">'+esc(s.wm)+'</div>':'')+cover+toc+'<div class="c">\n'+bd+'\n</div>';
+  if(cu){
+    let h=TPLS()[s.tpl.slice(2)]||'<html><body>{{content}}</body></html>';
+    h=h.replace(/\{\{title\}\}/g,()=>esc(s.name)).replace(/\{\{date\}\}/g,date);
+    h=/\{\{content\}\}/.test(h)?h.replace('{{content}}',()=>inner):/<\/body>/i.test(h)?h.replace(/<\/body>/i,()=>inner+'</body>'):h+inner;
+    const ins='<meta charset="utf-8">'+fl+'<style>'+lite(s,pr)+'</style>';
+    if(/<head[^>]*>/i.test(h))return h.replace(/<head[^>]*>/i,m=>m+ins);
+    if(/<html[^>]*>/i.test(h))return h.replace(/<html[^>]*>/i,m=>m+'<head>'+ins+'</head>');
+    return '<!DOCTYPE html><html dir="'+(rtl?'rtl':'ltr')+'"><head>'+ins+'</head><body>'+h+'</body></html>';
+  }
+  return '<!DOCTYPE html>\n<html lang="'+(rtl?'ar':'en')+'" dir="'+(rtl?'rtl':'ltr')+'">\n<head>\n<meta charset="utf-8">\n<title>'+esc(s.name)+'</title>\n'+fl+'\n<style>\n'+lite(s,pr)+'\n'+css(s,pal)+'\n</style>\n</head>\n<body>\n'+inner+'\n</body>\n</html>';
 }
 function render(){if(!manual)$('html').value=doc();$('fr').srcdoc=$('html').value}
 function show(t){
@@ -118,7 +289,8 @@ function show(t){
   document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
   if(t==='src'||t==='prev')render();
 }
-function projs(){const p=lsg('tc_projects',{});$('proj').innerHTML='<option value="">فتح مشروع محفوظ</option>'+Object.keys(p).map(k=>'<option>'+esc(k)+'</option>').join('')}
+function projs(){const p=lsg('tc_projects',{});$('proj').innerHTML='<option value="">اختر</option>'+Object.keys(p).map(k=>'<option>'+esc(k)+'</option>').join('')}
+function tplRefresh(sel){$('tpl').innerHTML=tplOpts();if(sel)$('tpl').value=sel}
 async function out(name,content,type){
   const f=new File([content],name,{type});
   if(navigator.canShare&&navigator.canShare({files:[f]})){
@@ -126,18 +298,49 @@ async function out(name,content,type){
   }
   const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;a.click();
 }
-$('tpl').innerHTML=Object.keys(T).map(k=>'<option value="'+k+'">'+T[k].n+'</option>').join('');
 ld(lsg('tc_draft',{}));projs();
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.t));
 document.addEventListener('input',e=>{
-  if(IDS.includes(e.target.id)||e.target.id==='txt'||e.target.id==='name'){manual=false;lss('tc_draft',st())}
+  const i=e.target.id;
+  if(IDS.includes(i)||i==='txt'||i==='name'){
+    manual=false;
+    if(i==='tpl')applyTheme();
+    lss('tc_draft',st());
+  }
 });
+$('ha').onclick=()=>{const t=$('ht').value.trim();if(!t)return;HL.push({t,c:+$('hc').value});$('ht').value='';chips();manual=false;lss('tc_draft',st())};
+$('hl').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;HL.splice(+b.dataset.i,1);chips();manual=false;lss('tc_draft',st())};
+$('ts').onclick=()=>{
+  const n=$('tn').value.trim(),c=$('tc').value;
+  if(!n||!c.trim()){toast('اكتب اسم القالب وكوده');return}
+  const t=TPLS();t[n]=c;lss('tc_tpls',t);tplRefresh('c:'+n);manual=false;lss('tc_draft',st());toast('حُفظ القالب واختير');
+};
+$('td').onclick=()=>{
+  const v=$('tpl').value;if(!/^c:/.test(v)){toast('اختر قالبًا من قوالبك أولًا');return}
+  const t=TPLS();delete t[v.slice(2)];lss('tc_tpls',t);tplRefresh('acad');applyTheme();manual=false;toast('حُذف القالب');
+};
+$('tf').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{$('tc').value=r.result;$('tn').value=f.name.replace(/\.html?$/i,'');e.target.value=''};
+  r.readAsText(f);
+};
 $('apply').onclick=()=>{manual=true;render();toast('تم تطبيق التعديل')};
 $('regen').onclick=()=>{manual=false;render();toast('أُعيد التوليد من النص')};
 $('save').onclick=()=>{const p=lsg('tc_projects',{});const n=$('name').value.trim()||'مستند';p[n]=st();lss('tc_projects',p);projs();toast('تم الحفظ')};
 $('proj').onchange=e=>{const s=lsg('tc_projects',{})[e.target.value];if(s){ld(s);manual=false;lss('tc_draft',st());toast('فُتح المشروع')}};
 $('exp').onclick=()=>{render();out(($('name').value.trim()||'document')+'.html',$('html').value,'text/html')};
-$('pdf').onclick=()=>{
+let PP=null;
+$('pdf').onclick=async()=>{
+  const C=window.Capacitor;
+  if(C&&C.isNativePlatform&&C.isNativePlatform()){
+    try{
+      PP=PP||C.registerPlugin('PrintPlugin');
+      await PP.print({html:manual?$('html').value:doc(true),name:($('name').value.trim()||'document'),margin:+$('mar').value,size:$('pg').value,land:$('ori').value==='l'});
+      toast('اختر «حفظ بصيغة PDF» من قائمة الطابعات');
+    }catch(e){toast('تعذّرت الطباعة')}
+    return;
+  }
   show('prev');
   setTimeout(()=>{try{$('fr').contentWindow.focus();$('fr').contentWindow.print()}catch{toast('تعذّرت الطباعة')}},500);
 };
