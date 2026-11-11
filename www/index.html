@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TextCraft Studio</title>
+<style>
+:root{--ink:#1b2430;--ac:#2f5d8a;--sf:#eef1f5;--ln:#cbd3dc}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:'Noto Sans Arabic',Tahoma,'Segoe UI',system-ui,sans-serif;color:var(--ink);background:#fff;display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px)}
+header{display:flex;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--ln)}
+#name{flex:1;min-width:0;font-family:inherit;font-size:16px;font-weight:600;border:0;background:var(--sf);padding:9px 10px;border-radius:6px;color:inherit}
+button{font-family:inherit;font-size:15px;border:1px solid var(--ac);background:#fff;color:var(--ac);padding:8px 12px;border-radius:6px}
+button.main{background:var(--ac);color:#fff}
+main{flex:1;min-height:0;position:relative}
+section{display:none;position:absolute;inset:0;padding:12px;overflow:auto}
+section.on{display:flex;flex-direction:column;gap:10px}
+textarea{flex:1;min-height:0;width:100%;border:1px solid var(--ln);border-radius:8px;padding:12px;font-family:inherit;font-size:16px;line-height:1.8;color:inherit;resize:none}
+#html{direction:ltr;font-family:ui-monospace,Consolas,monospace;font-size:13px;line-height:1.5}
+iframe{flex:1;width:100%;border:0;background:#d9dee5;border-radius:6px}
+nav{display:flex;border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;border-radius:0;padding:14px 0;color:#566;background:#fff}
+nav button.on{color:var(--ac);font-weight:600;box-shadow:inset 0 3px var(--ac)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 0}
+.row select,.row input{max-width:55%;font-family:inherit;font-size:15px}
+.row select{padding:6px;border:1px solid var(--ln);border-radius:6px;background:#fff;color:inherit}
+small{color:#566}
+.bar{display:flex;gap:8px;align-items:center}
+#toast{position:fixed;bottom:76px;inset-inline:16px;background:var(--ink);color:#fff;padding:10px 14px;border-radius:8px;text-align:center;display:none}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>
+  <input id="name" value="مستند جديد" aria-label="اسم المستند">
+  <button id="save">حفظ</button>
+  <button id="exp">HTML</button>
+  <button id="pdf" class="main">PDF</button>
+</header>
+<main>
+  <section id="text" class="on">
+    <textarea id="txt" placeholder="اكتب النص أو الصقه هنا"></textarea>
+    <div class="bar"><label for="file"><small>استيراد ملف TXT أو HTML</small></label><input type="file" id="file" accept=".txt,.html,.htm,text/plain,text/html"></div>
+  </section>
+  <section id="set">
+    <div class="row"><label for="tpl">القالب</label><select id="tpl"></select></div>
+    <div class="row"><label for="mode">معالجة النص</label><select id="mode"><option value="struct">منظم (عناوين وقوائم)</option><option value="raw">نص أصلي دون تغيير</option></select></div>
+    <small>في الوضعين يُحفظ كل حرف ورقم كما كُتب، ولا يُضاف أي محتوى. للعناوين استخدم # و ## و ###، وللقوائم - في أول السطر.</small>
+    <div class="row"><label for="dir">الاتجاه</label><select id="dir"><option value="rtl">عربي (من اليمين)</option><option value="ltr">English (LTR)</option></select></div>
+    <div class="row"><label for="font">الخط</label><select id="font"><option value="'Noto Naskh Arabic','Traditional Arabic','Droid Naskh',serif">نسخ</option><option value="'Noto Sans Arabic',Tahoma,'Segoe UI',sans-serif">سانس</option><option value="Georgia,'Noto Naskh Arabic',serif">Georgia</option></select></div>
+    <div class="row"><label for="size">حجم الخط</label><input type="range" id="size" min="10" max="18" value="12"></div>
+    <div class="row"><label for="col">لون النص</label><input type="color" id="col" value="#1b2430"></div>
+    <div class="row"><label for="mar">الهوامش</label><input type="range" id="mar" min="5" max="30" value="15"></div>
+    <div class="row"><label for="cols">الأعمدة</label><select id="cols"><option value="1">عمود واحد</option><option value="2">عمودان</option></select></div>
+    <div class="row"><label for="proj">مشاريعي</label><select id="proj"><option value="">فتح مشروع محفوظ</option></select></div>
+  </section>
+  <section id="src">
+    <textarea id="html" spellcheck="false" aria-label="كود HTML"></textarea>
+    <div class="bar"><button id="apply" class="main">تطبيق التعديل</button><button id="regen">إعادة التوليد من النص</button></div>
+    <small>تغيير النص أو الإعدادات يعيد توليد الكود ويستبدل تعديلاتك هنا.</small>
+  </section>
+  <section id="prev"><iframe id="fr" title="معاينة"></iframe></section>
+</main>
+<nav>
+  <button data-t="text" class="on">النص</button>
+  <button data-t="set">التنسيق</button>
+  <button data-t="src">HTML</button>
+  <button data-t="prev">معاينة</button>
+</nav>
+<div id="toast" role="status"></div>
+<script>
+const $=id=>document.getElementById(id);
+const T={
+  acad:{n:'أكاديمي',c:'h1{color:#1d3a5f;border-bottom:2px solid #1d3a5f}h2{color:#1d3a5f}'},
+  med:{n:'طبي',c:'h1{color:#14665a}h2{background:#e4f2ef;color:#14665a;padding:.3em .6em;border-inline-start:5px solid #1f8a7a}'},
+  rev:{n:'مراجعة',c:'h2{background:#fff3d6;padding:.3em .6em;border-radius:4px}h3{color:#a3470f}'},
+  form:{n:'رسمي',c:'h1{text-align:center}h2{border-bottom:1px solid #555}'},
+  bw:{n:'أبيض وأسود',c:'*{color:#000!important;background:#fff!important}h1,h2{border-bottom:1px solid #000}'}
+};
+const IDS=['tpl','mode','dir','font','size','col','mar','cols'];
+let manual=false,tt;
+const lsg=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}};
+const lss=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}};
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+function toast(m){const e=$('toast');e.textContent=m;e.style.display='block';clearTimeout(tt);tt=setTimeout(()=>e.style.display='none',2500)}
+function st(){const s={name:$('name').value,text:$('txt').value};IDS.forEach(i=>s[i]=$(i).value);return s}
+function ld(s){$('name').value=s.name||'مستند جديد';$('txt').value=s.text||'';IDS.forEach(i=>{if(s[i]!=null)$(i).value=s[i]})}
+function body(t,mode){
+  if(mode==='raw')return t.split(/\n{2,}/).filter(p=>p.trim()).map(p=>'<p>'+esc(p).replace(/\n/g,'<br>')+'</p>').join('\n');
+  const out=[],para=[];let ul=false;
+  const fp=()=>{if(para.length){out.push('<p>'+para.join('<br>')+'</p>');para.length=0}};
+  const eu=()=>{if(ul){out.push('</ul>');ul=false}};
+  for(const raw of t.split('\n')){
+    const l=raw.trimEnd();let m;
+    if(!l.trim()){fp();eu();continue}
+    if(m=l.match(/^(#{1,3})\s+(.*)/)){fp();eu();out.push('<h'+m[1].length+'>'+esc(m[2])+'</h'+m[1].length+'>')}
+    else if(m=l.match(/^[-*•]\s+(.*)/)){fp();if(!ul){out.push('<ul>');ul=true}out.push('<li>'+esc(m[1])+'</li>')}
+    else{eu();para.push(esc(l))}
+  }
+  fp();eu();return out.join('\n');
+}
+function doc(){
+  const s=st();
+  return '<!DOCTYPE html>\n<html lang="'+(s.dir==='rtl'?'ar':'en')+'" dir="'+s.dir+'">\n<head>\n<meta charset="utf-8">\n<title>'+esc(s.name)+'</title>\n<style>\n'
+  +'@page{size:A4;margin:'+s.mar+'mm}\n'
+  +'body{font-family:'+s.font+';font-size:'+s.size+'pt;line-height:1.8;color:'+s.col+';margin:0}\n'
+  +'.c{column-count:'+s.cols+';column-gap:8mm}\n'
+  +'h1,h2,h3{break-after:avoid;line-height:1.4}p,li{orphans:3;widows:3}\n'
+  +'table{width:100%;border-collapse:collapse}td,th{border:1px solid #999;padding:4px}\n'
+  +T[s.tpl].c+'\n'
+  +'@media screen{html{background:#d9dee5}body{background:#fff;max-width:210mm;margin:8px auto;padding:'+s.mar+'mm}}\n'
+  +'</style>\n</head>\n<body>\n<div class="c">\n'+body(s.text,s.mode)+'\n</div>\n</body>\n</html>';
+}
+function render(){if(!manual)$('html').value=doc();$('fr').srcdoc=$('html').value}
+function show(t){
+  document.querySelectorAll('section').forEach(x=>x.classList.toggle('on',x.id===t));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  if(t==='src'||t==='prev')render();
+}
+function projs(){const p=lsg('tc_projects',{});$('proj').innerHTML='<option value="">فتح مشروع محفوظ</option>'+Object.keys(p).map(k=>'<option>'+esc(k)+'</option>').join('')}
+async function out(name,content,type){
+  const f=new File([content],name,{type});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){
+    try{await navigator.share({files:[f]});return}catch(e){if(e.name==='AbortError')return}
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=name;a.click();
+}
+$('tpl').innerHTML=Object.keys(T).map(k=>'<option value="'+k+'">'+T[k].n+'</option>').join('');
+ld(lsg('tc_draft',{}));projs();
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.t));
+document.addEventListener('input',e=>{
+  if(IDS.includes(e.target.id)||e.target.id==='txt'||e.target.id==='name'){manual=false;lss('tc_draft',st())}
+});
+$('apply').onclick=()=>{manual=true;render();toast('تم تطبيق التعديل')};
+$('regen').onclick=()=>{manual=false;render();toast('أُعيد التوليد من النص')};
+$('save').onclick=()=>{const p=lsg('tc_projects',{});const n=$('name').value.trim()||'مستند';p[n]=st();lss('tc_projects',p);projs();toast('تم الحفظ')};
+$('proj').onchange=e=>{const s=lsg('tc_projects',{})[e.target.value];if(s){ld(s);manual=false;lss('tc_draft',st());toast('فُتح المشروع')}};
+$('exp').onclick=()=>{render();out(($('name').value.trim()||'document')+'.html',$('html').value,'text/html')};
+$('pdf').onclick=()=>{
+  show('prev');
+  setTimeout(()=>{try{$('fr').contentWindow.focus();$('fr').contentWindow.print()}catch{toast('تعذّرت الطباعة')}},500);
+};
+$('file').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    if(/\.html?$/i.test(f.name)){$('html').value=r.result;manual=true;show('src')}
+    else{$('txt').value=r.result;manual=false;lss('tc_draft',st())}
+    e.target.value='';
+  };
+  r.readAsText(f);
+};
+</script>
+</body>
+</html>
