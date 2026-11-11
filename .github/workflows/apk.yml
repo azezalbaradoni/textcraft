@@ -12,10 +12,100 @@ jobs:
       - run: |
           npm init -y
           npm i @capacitor/core @capacitor/cli @capacitor/android
+          FONTS="cairo tajawal amiri noto-naskh-arabic almarai ibm-plex-sans-arabic el-messiri scheherazade-new reem-kufi inter merriweather lora"
+          for f in $FONTS; do npm i @fontsource/$f || true; done
+          for f in $FONTS; do
+            S=node_modules/@fontsource/$f
+            [ -d $S ] || continue
+            mkdir -p www/fonts/$f/files
+            cp $S/400.css $S/700.css www/fonts/$f/ || true
+            cp $S/files/*-arabic-400-normal.woff2 $S/files/*-arabic-700-normal.woff2 $S/files/*-latin-400-normal.woff2 $S/files/*-latin-700-normal.woff2 www/fonts/$f/files/ 2>/dev/null || true
+          done
           npx cap init "TextCraft Studio" com.textcraft.studio --web-dir www
           npx cap add android
           npx cap sync android
           printf '\ndependencies {\n    implementation(platform("org.jetbrains.kotlin:kotlin-bom:2.2.20"))\n}\n' >> android/app/build.gradle
+          D=android/app/src/main/java/com/textcraft/studio
+          mkdir -p $D
+          cat > $D/PrintPlugin.java <<'EOF'
+          package com.textcraft.studio;
+
+          import android.content.Context;
+          import android.print.PrintAttributes;
+          import android.print.PrintManager;
+          import android.webkit.WebView;
+          import android.webkit.WebViewClient;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+
+          @CapacitorPlugin(name = "PrintPlugin")
+          public class PrintPlugin extends Plugin {
+            private WebView keep;
+
+            @PluginMethod
+            public void print(final PluginCall call) {
+              final String html = call.getString("html", "");
+              final String name = call.getString("name", "document");
+              final int mm = call.getInt("margin", 15);
+              final String size = call.getString("size", "A4");
+              final boolean land = call.getBoolean("land", false);
+              getActivity().runOnUiThread(new Runnable() {
+                public void run() {
+                  try {
+                    final boolean[] done = {false};
+                    final WebView w = new WebView(getActivity());
+                    keep = w;
+                    w.getSettings().setAllowFileAccess(true);
+                    w.getSettings().setAllowFileAccessFromFileURLs(true);
+                    w.getSettings().setAllowUniversalAccessFromFileURLs(true);
+                    w.setWebViewClient(new WebViewClient() {
+                      @Override
+                      public void onPageFinished(final WebView v, String u) {
+                        if (done[0]) return;
+                        done[0] = true;
+                        v.postDelayed(new Runnable() {
+                          public void run() {
+                            int m = (int) (mm / 25.4 * 1000);
+                            PrintAttributes.MediaSize ms = PrintAttributes.MediaSize.ISO_A4;
+                            if (size.equals("A5")) ms = PrintAttributes.MediaSize.ISO_A5;
+                            if (size.equals("LET")) ms = PrintAttributes.MediaSize.NA_LETTER;
+                            if (land) ms = ms.asLandscape();
+                            PrintAttributes at = new PrintAttributes.Builder()
+                              .setMediaSize(ms)
+                              .setMinMargins(new PrintAttributes.Margins(m, m, m, m))
+                              .build();
+                            PrintManager pm = (PrintManager) getActivity().getSystemService(Context.PRINT_SERVICE);
+                            pm.print(name, v.createPrintDocumentAdapter(name), at);
+                            call.resolve();
+                          }
+                        }, 1200);
+                      }
+                    });
+                    w.loadDataWithBaseURL("file:///android_asset/public/", html, "text/html", "UTF-8", null);
+                  } catch (Exception e) {
+                    call.reject(e.getMessage());
+                  }
+                }
+              });
+            }
+          }
+          EOF
+          cat > $D/MainActivity.java <<'EOF'
+          package com.textcraft.studio;
+
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              registerPlugin(PrintPlugin.class);
+              super.onCreate(savedInstanceState);
+            }
+          }
+          EOF
           cd android && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with: { name: apk, path: android/app/build/outputs/apk/debug/app-debug.apk }
